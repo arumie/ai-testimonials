@@ -13,6 +13,7 @@
     <PackageReference Include="Betalgo.OpenAI" Version="7.4.6" />
     <PackageReference Include="Betalgo.OpenAI.Utilities" Version="7.0.4" />
     <PackageReference Include="Polly.Core" Version="8.2.1" />
+    <PackageReference Include="Npgsql" Version="8.0.2" />
   </ItemGroup>
 
 </Project>

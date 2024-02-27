@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 using OpenAI;
 using OpenAI.Managers;
 using OpenAI.ObjectModels.RequestModels;
-using static OpenAI.ObjectModels.StaticValues.ImageStatics.ImageDetailTypes;
 using static OpenAI.ObjectModels.StaticValues.ImageStatics;
 
 namespace AiTestimonials.Services;
@@ -30,20 +29,20 @@ public class AiTestimonialsService
 
     public async Task<TestimonialResult> GenerateAiTestimonialAsync()
     {
-        var testimonial = await CreateTestimonialAsync("David Zachariae, a Frontend Developer, AI Engineer.");
+        var testimonial = await CreateTestimonialAsync("David Zachariae", "Developing great frontend apps and work with AI");
         return await GenerateCompanyLogoAsync(testimonial);
 
     }
 
-    private async Task<TestimonialResult> CreateTestimonialAsync(string prompt)
+    private async Task<TestimonialResult> CreateTestimonialAsync(string developer, string work)
     {
         var res = await _openaiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest()
         {
-            Messages = new List<ChatMessage>
-            {
+            Messages =
+            [
                 ChatMessage.FromSystem("You generate random short testimonials from fake IT people and companies where you mention fake projects. You output is valid JSON format: { Testimonial: string, TestifierName: string, TestifierCompany: string, TestifierPosition: string }"),
-                ChatMessage.FromUser($"Create a random testimonial from a company praising the following developer: {prompt}")
-            },
+                ChatMessage.FromUser($"Create a random testimonial from a company praising the following software developer \"{developer}\", for his great work with \"{work}\"")
+            ],
             MaxTokens = 1000,
             Temperature = 0.9f
 
@@ -72,7 +71,7 @@ public class AiTestimonialsService
         var res = await _openaiService.CreateImage(new ImageCreateRequest()
         {
             Model = "dall-e-3",
-            Prompt = $"Generate a company logo for the IT company with the following name: '${testimonial.TestifierCompany}'. The logos coloscheme should be {colorScheme}",
+            Prompt = $"Generate a company logo for the IT company with the following name: '${testimonial.TestifierCompany}'. The logos coloscheme should be {colorScheme} and the background of the logo should be #f1f5f9 and the logo should take up the whole image",
             N = 1,
             Size = Size.Size1024,
             Quality = Quality.Hd,

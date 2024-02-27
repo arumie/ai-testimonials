@@ -1,5 +1,6 @@
 using AiTestimonials.Api;
 using AiTestimonials.Options;
+using AiTestimonials.Repository;
 using AiTestimonials.Services;
 using OpenAI.Extensions;
 
@@ -17,6 +18,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<AiTestimonialsService>();
+builder.Services.AddScoped<VercelPostgresRepository>();
 
 var app = builder.Build();
 
