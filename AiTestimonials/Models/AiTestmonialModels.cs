@@ -7,4 +7,5 @@ public record TestimonialResult
     public string? TestifierCompany { get; init; }
     public string? TestifierPosition { get; init; }
     public string? LogoUrl { get; set; }
+    public string? LogoB64 { get; set; }
 }

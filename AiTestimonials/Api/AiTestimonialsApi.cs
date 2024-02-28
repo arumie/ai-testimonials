@@ -2,6 +2,7 @@ using AiTestimonials.Models;
 using AiTestimonials.Repository;
 using AiTestimonials.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 
 namespace AiTestimonials.Api;
 
@@ -14,9 +15,10 @@ public static void RegisterAiTestimonialsEndpoints(this IEndpointRouteBuilder ro
         route.MapGet("", GetTestimonialsAsync);
     }
 
-    private static async Task<Ok<TestimonialResult>> PostGenerateAiTestimonialAsync(AiTestimonialsService service, VercelPostgresRepository repo)
+    private static async Task<Ok<TestimonialResult>> PostGenerateAiTestimonialAsync(string name, string skills, [FromHeader(Name = "OPENAI_KEY")] string? openAIKey, AiTestimonialsService service, VercelPostgresRepository repo)
     {
-        var res = await service.GenerateAiTestimonialAsync();
+        service.SetupOpenAIService(openAIKey);
+        var res = await service.GenerateAiTestimonialAsync(name, skills);
         await repo.CreatTestimonialsTableAsync();
         await repo.AddTestimonialAsync(res);
         return TypedResults.Ok(res);

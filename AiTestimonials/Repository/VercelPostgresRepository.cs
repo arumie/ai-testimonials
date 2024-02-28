@@ -1,4 +1,3 @@
-using System.Text.Json;
 using AiTestimonials.Models;
 using AiTestimonials.Options;
 using Microsoft.Extensions.Options;
@@ -9,7 +8,7 @@ namespace AiTestimonials.Repository;
 public class VercelPostgresRepository
 {
 
-    private NpgsqlDataSource _db;
+    private readonly NpgsqlDataSource _db;
 
     public VercelPostgresRepository(IOptions<ServiceOptions> serviceOptions)
     {

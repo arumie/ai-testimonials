@@ -1,6 +1,7 @@
 using System.Text.Json;
 using AiTestimonials.Models;
 using AiTestimonials.Options;
+using MathNet.Numerics.Random;
 using Microsoft.Extensions.Options;
 using OpenAI;
 using OpenAI.Managers;
@@ -9,34 +10,46 @@ using static OpenAI.ObjectModels.StaticValues.ImageStatics;
 
 namespace AiTestimonials.Services;
 
-public class AiTestimonialsService
+public class AiTestimonialsService(IOptions<ServiceOptions> serviceOptions, ILogger<AiTestimonialsService> logger)
 {
-    private readonly ILogger<AiTestimonialsService> _logger;
+    private readonly ILogger<AiTestimonialsService> _logger = logger;
+    private readonly ServiceOptions _serviceOptions = serviceOptions.Value;
 
-    private OpenAIService _openaiService;
+    private OpenAIService? openaiService;
 
-    public AiTestimonialsService(IOptions<ServiceOptions> serviceOptions, ILogger<AiTestimonialsService> logger)
+    public void SetupOpenAIService(string? apiKey)
     {
-        _logger = logger;
-        _openaiService = new OpenAIService(new OpenAiOptions()
-        {
-            ApiKey = serviceOptions.Value.OpenAiApiKey
-        });
 
-        _openaiService.SetDefaultModelId("gpt-4");
+        var key = apiKey ?? _serviceOptions?.OpenAiApiKey;
+        if ( key != null)
+        {
+            openaiService = new OpenAIService(new OpenAiOptions()
+            {
+                ApiKey = key
+            });
+
+            openaiService.SetDefaultModelId("gpt-4");
+        } else {
+            throw new Exception("No API key for OpenAI specified");
+        }
 
     }
 
-    public async Task<TestimonialResult> GenerateAiTestimonialAsync()
+    public async Task<TestimonialResult> GenerateAiTestimonialAsync(string name, string skills)
     {
-        var testimonial = await CreateTestimonialAsync("David Zachariae", "Developing great frontend apps and work with AI");
+        var testimonial = await CreateTestimonialAsync(name, skills);
         return await GenerateCompanyLogoAsync(testimonial);
 
     }
 
     private async Task<TestimonialResult> CreateTestimonialAsync(string developer, string work)
     {
-        var res = await _openaiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest()
+        if (openaiService == null)
+        {
+            throw new Exception("OpenAIService not initialized");
+        }   
+
+        var res = await openaiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest()
         {
             Messages =
             [
@@ -66,22 +79,39 @@ public class AiTestimonialsService
 
     private async Task<TestimonialResult> GenerateCompanyLogoAsync(TestimonialResult testimonial)
     {
-        string[] colors = ["Red", "Green", "Teal", "Yellow", "Orange"];
-        var colorScheme = colors[new Random().NextInt64(0, 4)];
-        var res = await _openaiService.CreateImage(new ImageCreateRequest()
+        if (openaiService == null)
+        {
+            throw new Exception("OpenAIService not initialized");
+        } 
+
+        var random = new Random();
+        string[] styles = ["mascot", "pictorial", "abstract", "emblem", "lettermark", "simple"];
+        string[] designers = ["Saul Bass", "Paul Rand", "Piet Mondrian"];
+        string[] genres = ["Abstract Expessionism", "Crystal Cubism", "Pop Art"];
+        string[] techniques = ["gradient", "outline"];
+        var style = styles[random.NextInt64(0, styles.Length - 1)];
+        var useDesigner = random.NextBoolean();
+        var useGenre = random.NextBoolean();
+        var useTechnique = random.NextBoolean();
+        var designer = useDesigner ? $", by {designers[random.NextInt64(0, designers.Length - 1)]}" : "";
+        var genre = useGenre ? $", {genres[random.NextInt64(0, genres.Length - 1)]}" : "";
+        var technique = useTechnique ? $", {techniques[random.NextInt64(0, techniques.Length - 1)]}" : "";
+        
+        var prompt = $"A {style} company logo for the company {testimonial.TestifierCompany}, vector{technique}{genre}{designer}'";
+        var res = await openaiService.CreateImage(new ImageCreateRequest()
         {
             Model = "dall-e-3",
-            Prompt = $"Generate a company logo for the IT company with the following name: '${testimonial.TestifierCompany}'. The logos coloscheme should be {colorScheme} and the background of the logo should be #f1f5f9 and the logo should take up the whole image",
+            Prompt = prompt,
             N = 1,
             Size = Size.Size1024,
             Quality = Quality.Hd,
             Style = Style.Natural,
+            ResponseFormat = "b64_json"
         });
 
         if (res.Successful)
         {
-
-            testimonial.LogoUrl = res.Results.First().Url;
+            testimonial.LogoB64 = res.Results.First().B64;
 
             return testimonial;
         }

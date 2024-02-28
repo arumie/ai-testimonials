@@ -2,12 +2,8 @@ using AiTestimonials.Api;
 using AiTestimonials.Options;
 using AiTestimonials.Repository;
 using AiTestimonials.Services;
-using OpenAI.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 
 builder.Services.AddOptions<ServiceOptions>()
     .Bind(builder.Configuration.GetSection(ServiceOptions.Section))
