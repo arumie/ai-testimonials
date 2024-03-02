@@ -1,0 +1,76 @@
+openapi: 3.0.1
+info:
+  title: AI Testimonials
+  description: API for generating fake testimonials
+  version: 1.0.0
+schemes:
+- https
+produces:
+- application/json
+paths:
+  /api/v1/ai-testimonials/generate:
+    post:
+      tags:
+        - AiTestimonialsApi
+      parameters:
+        - name: name
+          in: query
+          required: true
+          style: form
+          schema:
+            type: string
+        - name: skills
+          in: query
+          required: true
+          style: form
+          schema:
+            type: string
+        - name: OPENAI_KEY
+          in: header
+          style: simple
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestimonialResult'
+  /api/v1/ai-testimonials:
+    get:
+      tags:
+        - AiTestimonialsApi
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TestimonialResult'
+components:
+  schemas:
+    TestimonialResult:
+      type: object
+      properties:
+        testimonial:
+          type: string
+          nullable: true
+        testifierName:
+          type: string
+          nullable: true
+        testifierCompany:
+          type: string
+          nullable: true
+        testifierPosition:
+          type: string
+          nullable: true
+        logoUrl:
+          type: string
+          nullable: true
+        logoB64:
+          type: string
+          nullable: true
+      additionalProperties: false
