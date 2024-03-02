@@ -100,17 +100,6 @@ jobs:
           docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{env.GAR_REPO}}/${{ env.SERVICE }}:${{ github.sha }}"
 
       # END - Docker auth and build
-      - name: Approve deployment
-        uses: trstringer/manual-approval@v1
-        with:
-          secret: ${{ github.TOKEN }}
-          approvers: arumie
-          minimum-approvals: 1
-          issue-title: "Deploying ${{ env.SERVICE }}:${{ github.sha }} to Cloud Run"
-          issue-body: "Please approve or deny the deployment"
-          exclude-workflow-initiator-as-approver: false
-          additional-approved-words: ''
-          additional-denied-words: ''
 
       - name: Deploy to Cloud Run
         id: deploy
