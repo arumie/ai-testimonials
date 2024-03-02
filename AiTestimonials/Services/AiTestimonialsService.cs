@@ -44,20 +44,24 @@ public class AiTestimonialsService(IOptions<ServiceOptions> serviceOptions, ILog
 
     private async Task<TestimonialResult> CreateTestimonialAsync(string developer, string work)
     {
+
         if (openaiService == null)
         {
             throw new Exception("OpenAIService not initialized");
-        }   
+        }
+
+        int[] numWordsPossibilities = [30, 50, 70];
+        var numWords = numWordsPossibilities[new Random().NextInt64(0, numWordsPossibilities.Length - 1)];
 
         var res = await openaiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest()
         {
             Messages =
             [
-                ChatMessage.FromSystem("You generate random short testimonials from fake IT people and companies where you mention fake projects. You output is valid JSON format: { Testimonial: string, TestifierName: string, TestifierCompany: string, TestifierPosition: string }"),
-                ChatMessage.FromUser($"Create a random testimonial from a company praising the following software developer \"{developer}\", for his great work with \"{work}\"")
+                ChatMessage.FromSystem("You generate random short testimonials from people and companies You output is valid JSON format: { Testimonial: string, TestifierName: string, TestifierCompany: string, TestifierPosition: string }"),
+                ChatMessage.FromUser($"Create a short ({numWords} words) random testimonial from a company praising the following software developer \"{developer}\". Focus on the the following skills: \"{work}\". The name of the testifier should be a plausible name (not John Doe).")
             ],
             MaxTokens = 1000,
-            Temperature = 0.9f
+            Temperature = 1.2f
 
         });
         if (res.Successful)
@@ -85,9 +89,9 @@ public class AiTestimonialsService(IOptions<ServiceOptions> serviceOptions, ILog
         } 
 
         var random = new Random();
-        string[] styles = ["mascot", "pictorial", "abstract", "emblem", "lettermark", "simple"];
+        string[] styles = ["mascot", "pictorial"];
         string[] designers = ["Saul Bass", "Paul Rand", "Piet Mondrian"];
-        string[] genres = ["Abstract Expessionism", "Crystal Cubism", "Pop Art"];
+        string[] genres = ["Crystal Cubism", "Pop Art"];
         string[] techniques = ["gradient", "outline"];
         var style = styles[random.NextInt64(0, styles.Length - 1)];
         var useDesigner = random.NextBoolean();
@@ -97,14 +101,14 @@ public class AiTestimonialsService(IOptions<ServiceOptions> serviceOptions, ILog
         var genre = useGenre ? $", {genres[random.NextInt64(0, genres.Length - 1)]}" : "";
         var technique = useTechnique ? $", {techniques[random.NextInt64(0, techniques.Length - 1)]}" : "";
         
-        var prompt = $"A {style} company logo for the company {testimonial.TestifierCompany}, vector{technique}{genre}{designer}'";
+        var prompt = $"A {style} company logo for an IT company called {testimonial.TestifierCompany}, {technique}{genre}'";
         var res = await openaiService.CreateImage(new ImageCreateRequest()
         {
-            Model = "dall-e-3",
+            Model = "dall-e-2",
             Prompt = prompt,
             N = 1,
-            Size = Size.Size1024,
-            Quality = Quality.Hd,
+            Size = Size.Size256,
+            Quality = Quality.Standard,
             Style = Style.Natural,
             ResponseFormat = "b64_json"
         });
