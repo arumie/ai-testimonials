@@ -51,6 +51,9 @@ on:
 env:
   SERVICE: ai-testimonials
   REGION: europe-west3
+  GAR_LOCATION: europe-west3
+  GAR_REPO: "dzach-repo"
+  PROJECT_ID: "dzach-416010"
 
 jobs:
   deploy:
