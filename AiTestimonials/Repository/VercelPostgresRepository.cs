@@ -12,11 +12,7 @@ public class VercelPostgresRepository
 
     public VercelPostgresRepository(IOptions<ServiceOptions> serviceOptions)
     {
-        var host = serviceOptions.Value.PostgresHost;
-        var db = serviceOptions.Value.PostgresDatabase;
-        var user = serviceOptions.Value.PostgresUser;
-        var pwd = serviceOptions.Value.PostgresPassword;
-        var connectionString = $"Host={host};Username={user};Password={pwd};Database={db}";
+        var connectionString = serviceOptions.Value.PostgresConnectionString;
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
         dataSourceBuilder.EnableDynamicJson();
         _db = dataSourceBuilder.Build();
