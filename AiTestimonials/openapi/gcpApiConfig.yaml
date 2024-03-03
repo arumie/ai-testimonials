@@ -1,0 +1,122 @@
+---
+swagger: '2.0'
+info:
+  title: AI Testimonials
+  description: API for generating fake testimonials
+  version: 1.1.0
+schemes:
+- https
+produces:
+- application/json
+x-google-backend:
+  address: https://ai-testimonials-trtv3l63ra-ey.a.run.app
+paths:
+  /api/v1/ai-testimonials/generate:
+    post:
+      tags:
+        - AiTestimonialsApi
+      operationId: "GenerateAiTestimonial"
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: OPENAI_KEY
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/TestimonialInput'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Identity'
+  /api/v1/ai-testimonials/redo:
+    post:
+      tags:
+        - AiTestimonialsApi
+      operationId: "RedoAiTestimonial"
+      parameters:
+        - in: query
+          name: id
+          required: true
+          type: string
+          collectionFormat: multi
+      responses:
+        '200':
+          description: OK
+  /api/v1/ai-testimonials/save:
+    post:
+      tags:
+        - AiTestimonialsApi
+      operationId: "SaveAiTestimonial"
+      parameters:
+        - in: query
+          name: id
+          required: true
+          type: string
+          collectionFormat: multi
+      responses:
+        '200':
+          description: OK
+  /api/v1/ai-testimonials:
+    get:
+      tags:
+        - AiTestimonialsApi
+      operationId: "GetAiTestimonials"
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: id
+          type: string
+          collectionFormat: multi
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/TestimonialResult'
+definitions:
+  Identity:
+    type: object
+    properties:
+      id:
+        type: string
+    additionalProperties: false
+  TestimonialInput:
+    type: object
+    properties:
+      name:
+        type: string
+      skills:
+        type: string
+    additionalProperties: false
+  TestimonialResult:
+    type: object
+    properties:
+      testimonial:
+        type: string
+      testifierName:
+        type: string
+      testifierCompany:
+        type: string
+      testifierPosition:
+        type: string
+      logoUrl:
+        type: string
+      logoB64:
+        type: string
+    additionalProperties: false
+securityDefinitions:
+  API_KEY:
+    type: apiKey
+    name: x-api-key
+    in: header
+    description: ApiKey must appear in header
+security:
+  - API_KEY: [ ]

@@ -58,10 +58,10 @@ public class AiTestimonialsService(IOptions<ServiceOptions> serviceOptions, ILog
             Messages =
             [
                 ChatMessage.FromSystem("You generate random short testimonials from people and companies You output is valid JSON format: { Testimonial: string, TestifierName: string, TestifierCompany: string, TestifierPosition: string }"),
-                ChatMessage.FromUser($"Create a short ({numWords} words) random testimonial from a company praising the following software developer \"{developer}\". Focus on the the following skills: \"{work}\". The name of the testifier should be a plausible name (not John Doe).")
+                ChatMessage.FromUser($"Create a ~{numWords} words long random testimonial from a company praising the following software developer \"{developer}\". Focus on the the following skills: \"{work}\". The name of the testifier should be a plausible name (not John Doe).")
             ],
             MaxTokens = 1000,
-            Temperature = 1.2f
+            Temperature = 0.9f
 
         });
         if (res.Successful)

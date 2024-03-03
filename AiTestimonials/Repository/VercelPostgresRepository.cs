@@ -40,6 +40,8 @@ public class VercelPostgresRepository
                 $@"
                 CREATE TABLE testimonials (
                 id SERIAL PRIMARY KEY,
+                status int,
+                input JSONB,
                 testimonial JSONB
                 );"
             );
@@ -47,16 +49,66 @@ public class VercelPostgresRepository
         }
     }
 
-    public async Task<bool> AddTestimonialAsync(TestimonialResult testimonialResult)
+    public async Task<int> CreateNewTestimonialAsync(TestimonialInput input)
     {
-        await using var cmd = _db.CreateCommand($"INSERT INTO testimonials (testimonial) VALUES (@value);");
-        var param = new NpgsqlParameter() { ParameterName = "value", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Jsonb, Value = testimonialResult };
-        cmd.Parameters.Add(param);
+        await using var cmd = _db.CreateCommand($"INSERT INTO testimonials (status, input) VALUES (@status, @input) RETURNING id;");
+        var param1 = new NpgsqlParameter() { ParameterName = "value", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer, Value = (int)TestimonialStatus.PENDING };
+        var param2 = new NpgsqlParameter() { ParameterName = "input", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Jsonb, Value = input };
+        cmd.Parameters.Add(param1);
+        cmd.Parameters.Add(param2);
         await using var reader = await cmd.ExecuteReaderAsync();
-        return await TableExistsAsync("testimonials");
+        while (await reader.ReadAsync())
+        {
+            var id = reader.GetFieldValue<int>(0);
+            return id;
+        }
+        throw new InvalidOperationException();
     }
 
-    public async Task<List<TestimonialResult>> GetTestimonialsAsync()
+    public async Task AddTestimonialAsync(TestimonialResult testimonialResult, string id)
+    {
+        await using var cmd = _db.CreateCommand($"UPDATE testimonials SET testimonial = @testimonial WHERE id = {id};");
+        var param = new NpgsqlParameter() { ParameterName = "testimonial", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Jsonb, Value = testimonialResult };
+        cmd.Parameters.Add(param);
+        await using var reader = await cmd.ExecuteReaderAsync();
+    }
+
+    public async Task UpdateTestimonialAsync(TestimonialStatus status, string id)
+    {
+        await using var cmd = _db.CreateCommand($"UPDATE testimonials SET status = @status WHERE id = {id};");
+        var param = new NpgsqlParameter() { ParameterName = "status", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer, Value = (int)status };
+        cmd.Parameters.Add(param);
+        await using var reader = await cmd.ExecuteReaderAsync();
+    }
+
+    public async Task<TestimonialEntity?> GetTestimonialsEntityAsync(string id)
+    {
+
+        var tableExists = await TableExistsAsync("testimonials");
+
+        if (tableExists)
+        {
+            var query = $"SELECT status, input, testimonial  FROM testimonials WHERE id = {id}";
+            await using var cmd = _db.CreateCommand(query);
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var status = (TestimonialStatus)reader.GetFieldValue<int>(0);
+                var input = reader.GetFieldValue<TestimonialInput>(1);
+                var testimonial = reader.GetFieldValue<TestimonialResult>(2);
+                return new TestimonialEntity()
+                {
+                    Id = id,
+                    Status = status,
+                    Input = input,
+                    Testimonial = testimonial
+                };
+            }
+        }
+        return null;
+    }
+
+    public async Task<List<TestimonialResult>> GetTestimonialsAsync(string? id)
     {
 
         var tableExists = await TableExistsAsync("testimonials");
@@ -64,7 +116,10 @@ public class VercelPostgresRepository
 
         if (tableExists)
         {
-            await using var cmd = _db.CreateCommand("SELECT testimonial FROM testimonials");
+            var query = id != null
+                ? $"SELECT testimonial FROM testimonials WHERE id = {id} AND status = {(int)TestimonialStatus.SUCCESSFUL}"
+                : $"SELECT testimonial FROM testimonials WHERE status = {(int)TestimonialStatus.SUCCESSFUL}";
+            await using var cmd = _db.CreateCommand(query);
             await using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
