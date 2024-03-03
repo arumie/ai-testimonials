@@ -9,7 +9,7 @@ schemes:
 produces:
 - application/json
 x-google-backend:
-  address: https://ai-testimonials-trtv3l63ra-ey.a.run.app
+  address: <CLOUD RUN URL>
 paths:
   /api/v1/ai-testimonials/generate:
     post:

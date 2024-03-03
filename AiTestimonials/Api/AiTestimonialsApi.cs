@@ -37,7 +37,7 @@ public static class AiTestimonialsApi
     private static async Task<IResult> PostRedoTestimonialsAsync(string id, AiTestimonialsService service, VercelPostgresRepository repo)
     {
         var entity = await repo.GetTestimonialsEntityAsync(id);
-        if (entity != null && entity.Status != TestimonialStatus.PENDING && entity.Status != TestimonialStatus.SAVED && entity.Input != null)
+        if (entity != null && entity.Status != TestimonialStatus.SAVED && entity.Input != null)
         {
             await repo.UpdateTestimonialAsync(TestimonialStatus.PENDING, id);
             GenerateAiTestimonialAsync(id, entity.Input.Name, entity.Input.Skills, service, repo).Forget();
@@ -63,9 +63,17 @@ public static class AiTestimonialsApi
 
     private static async Task GenerateAiTestimonialAsync(string id, string name, string skills, AiTestimonialsService service, VercelPostgresRepository repo)
     {
-        var res = await service.GenerateAiTestimonialAsync(name, skills);
-        await repo.CreatTestimonialsTableAsync();
-        await repo.AddTestimonialAsync(res, id);
-        await repo.UpdateTestimonialAsync(TestimonialStatus.SUCCESSFUL, id);
+        try
+        {
+            var res = await service.GenerateAiTestimonialAsync(name, skills);
+            await repo.CreatTestimonialsTableAsync();
+            await repo.AddTestimonialAsync(res, id);
+            await repo.UpdateTestimonialAsync(TestimonialStatus.SUCCESSFUL, id);
+        }
+        catch
+        {
+            await repo.UpdateTestimonialAsync(TestimonialStatus.FAILED, id);
+
+        }
     }
 }

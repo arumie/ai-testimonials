@@ -52,7 +52,7 @@ public class VercelPostgresRepository
     public async Task<int> CreateNewTestimonialAsync(TestimonialInput input)
     {
         await using var cmd = _db.CreateCommand($"INSERT INTO testimonials (status, input) VALUES (@status, @input) RETURNING id;");
-        var param1 = new NpgsqlParameter() { ParameterName = "value", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer, Value = (int)TestimonialStatus.PENDING };
+        var param1 = new NpgsqlParameter() { ParameterName = "status", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer, Value = (int)TestimonialStatus.PENDING };
         var param2 = new NpgsqlParameter() { ParameterName = "input", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Jsonb, Value = input };
         cmd.Parameters.Add(param1);
         cmd.Parameters.Add(param2);
