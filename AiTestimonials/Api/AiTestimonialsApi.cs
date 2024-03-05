@@ -18,7 +18,7 @@ public static class AiTestimonialsApi
         route.MapGet("", GetTestimonialsAsync);
     }
 
-    private static async Task<Ok<Identity>> PostGenerateAiTestimonialAsync(TestimonialInput input, [FromHeader(Name = "OPENAI_KEY")] string? openAIKey, AiTestimonialsService service, VercelPostgresRepository repo)
+    private static async Task<Ok<Identity>> PostGenerateAiTestimonialAsync(TestimonialInput input, [FromHeader(Name = "OPENAI_KEY")] string? openAIKey, AiTestimonialsService service, VercelPostgresRepository repo, ILoggerFactory loggerFactory)
     {
         service.SetupOpenAIService(openAIKey);
         var testimonialId = (await repo.CreateNewTestimonialAsync(input)).ToString();
@@ -27,8 +27,11 @@ public static class AiTestimonialsApi
             GenerateAiTestimonialAsync(testimonialId, input.Name, input.Skills, service, repo).Forget();
             return TypedResults.Ok(new Identity() { Id = testimonialId.ToString() });
         }
-        catch
+        catch (Exception e)
         {
+            var logger = loggerFactory.CreateLogger("AiTestimonialsApi");
+            logger.LogError(e, "Unexpected error happened when trying to generate testimonial");
+
             await repo.UpdateTestimonialAsync(TestimonialStatus.FAILED, testimonialId);
             throw;
         }
